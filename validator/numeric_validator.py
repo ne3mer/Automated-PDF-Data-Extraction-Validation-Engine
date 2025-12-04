@@ -3,7 +3,7 @@ Numeric Validation Module
 Validates numeric fields and numeric-related logic
 """
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 logger = logging.getLogger(__name__)
 
