@@ -28,9 +28,25 @@ class FieldExtractor:
     
     def extract_invoice_number(self) -> Optional[str]:
         """Extract invoice number from text"""
-        text = self.extracted_text.upper()
+        text = self.extracted_text
         
-        # Common words that shouldn't be considered invoice numbers
+        # First, try to find "Invoice Number: XXX" pattern
+        invoice_label_patterns = [
+            r"INVOICE\s+NUMBER[:\s]+([A-Z0-9\-]+)",
+            r"INVOICE\s+#[:\s]*([A-Z0-9\-]+)",
+            r"INV[\.\-\s]+([A-Z0-9\-]+)",
+        ]
+        
+        for pattern in invoice_label_patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                invoice_num = match.group(1).strip()
+                if invoice_num:
+                    logger.debug(f"Found invoice number: {invoice_num}")
+                    return invoice_num
+        
+        # Fallback to general patterns
+        text_upper = text.upper()
         excluded_words = {
             "OMSCHRIJVING", "DESCRIPTION", "BESCHRIJVING", "ARTIKEL", "ARTICLE",
             "ITEM", "PRODUCT", "PRODUKT", "NAAM", "NAME", "TITEL", "TITLE"
@@ -136,33 +152,45 @@ class FieldExtractor:
         amounts = {"total_amount": None, "tax_amount": None}
         text = self.extracted_text.upper()
         
-        # Total amount patterns
+        # Total amount patterns (prioritize "TOTAL:" over "Subtotal")
+        # Look for the final total, not subtotal
         total_patterns = [
-            r"TOTAL[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
-            r"AMOUNT[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
+            r"TOTAL[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",  # Must be standalone TOTAL, not Subtotal
             r"GRAND\s+TOTAL[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
             r"TOTAL\s+DUE[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
+            r"AMOUNT\s+DUE[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
         ]
         
         # Tax amount patterns
         tax_patterns = [
-            r"TAX[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
+            r"TAX\s*\([^)]*\)[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",  # Tax (VAT): $102.00
             r"VAT[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
             r"GST[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
+            r"TAX[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
             r"TAX\s+AMOUNT[:\s]+[\$€£]?\s*([\d,]+\.?\d*)",
         ]
         
-        # Extract total amount
+        # Extract total amount - look for the last occurrence (final total, not subtotal)
+        total_matches = []
         for pattern in total_patterns:
-            match = re.search(pattern, text)
-            if match:
-                amount_str = match.group(1).replace(",", "")
-                try:
-                    amounts["total_amount"] = float(amount_str)
-                    logger.debug(f"Found total amount: {amounts['total_amount']}")
-                    break
-                except ValueError:
-                    continue
+            matches = list(re.finditer(pattern, text))
+            if matches:
+                # Get the last match (usually the final total)
+                for match in matches:
+                    # Check it's not "Subtotal"
+                    before_text = text[max(0, match.start()-10):match.start()].upper()
+                    if "SUB" not in before_text:
+                        total_matches.append((match.end(), match.group(1)))
+        
+        if total_matches:
+            # Sort by position and take the last one (final total)
+            total_matches.sort(key=lambda x: x[0])
+            amount_str = total_matches[-1][1].replace(",", "")
+            try:
+                amounts["total_amount"] = float(amount_str)
+                logger.debug(f"Found total amount: {amounts['total_amount']}")
+            except ValueError:
+                pass
         
         # Extract tax amount
         for pattern in tax_patterns:
