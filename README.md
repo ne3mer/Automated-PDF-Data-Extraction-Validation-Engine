@@ -107,8 +107,10 @@ pdf_data_engine/
 
 3. **Install dependencies**
    ```bash
-   pip install -r requirements.txt
+   python3 -m pip install -r requirements.txt
    ```
+   
+   **Note**: Use `python3` and `python3 -m pip` to ensure you're using the correct Python version.
 
 ## 📖 Usage
 
@@ -118,7 +120,7 @@ pdf_data_engine/
 
 2. **Run the extraction engine**
    ```bash
-   python main.py
+   python3 main.py
    ```
 
 3. **Find results in the `output/` directory:**
@@ -131,27 +133,27 @@ pdf_data_engine/
 
 **Custom input/output directories:**
 ```bash
-python main.py --input /path/to/pdfs --output /path/to/output
+python3 main.py --input /path/to/pdfs --output /path/to/output
 ```
 
 **Dry-run mode (simulate without writing files):**
 ```bash
-python main.py --dry-run
+python3 main.py --dry-run
 ```
 
 **Debug mode (verbose logging):**
 ```bash
-python main.py --debug
+python3 main.py --debug
 ```
 
 **Skip deduplication:**
 ```bash
-python main.py --no-deduplication
+python3 main.py --no-deduplication
 ```
 
 **Combine options:**
 ```bash
-python main.py --input ./my_pdfs --output ./results --debug
+python3 main.py --input ./my_pdfs --output ./results --debug
 ```
 
 ## 📊 Extracted Fields
