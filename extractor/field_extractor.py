@@ -30,6 +30,12 @@ class FieldExtractor:
         """Extract invoice number from text"""
         text = self.extracted_text.upper()
         
+        # Common words that shouldn't be considered invoice numbers
+        excluded_words = {
+            "OMSCHRIJVING", "DESCRIPTION", "BESCHRIJVING", "ARTIKEL", "ARTICLE",
+            "ITEM", "PRODUCT", "PRODUKT", "NAAM", "NAME", "TITEL", "TITLE"
+        }
+        
         for pattern in config.INVOICE_NUMBER_PATTERNS:
             matches = re.finditer(pattern, text, re.IGNORECASE)
             for match in matches:
@@ -37,7 +43,13 @@ class FieldExtractor:
                 # Clean up common prefixes/suffixes
                 invoice_num = re.sub(r'^(INVOICE|INV)[\s\-:#]+', '', invoice_num, flags=re.IGNORECASE)
                 invoice_num = re.sub(r'^#\s*', '', invoice_num)
-                if invoice_num:
+                
+                # Skip if it's a common excluded word
+                if invoice_num.upper() in excluded_words:
+                    continue
+                
+                # Must contain at least one digit or be a valid format
+                if invoice_num and (re.search(r'\d', invoice_num) or len(invoice_num) > 3):
                     logger.debug(f"Found invoice number: {invoice_num}")
                     return invoice_num.strip()
         
@@ -168,36 +180,27 @@ class FieldExtractor:
     
     def extract_currency(self) -> Optional[str]:
         """Extract currency code from text"""
-        text = self.extracted_text.upper()
+        text = self.extracted_text
+        text_upper = text.upper()
         
-        # Look for currency symbols and codes
-        currency_map = {
-            "$": "USD",
-            "€": "EUR",
-            "£": "GBP",
-            "CAD": "CAD",
-            "AUD": "AUD",
-            "JPY": "JPY",
-            "CHF": "CHF",
-            "CNY": "CNY",
-            "INR": "INR",
-            "BRL": "BRL",
-        }
+        # Priority: Check for currency symbols first (most reliable)
+        if "€" in text or "EUR" in text_upper or "EURO" in text_upper:
+            logger.debug("Found currency: EUR")
+            return "EUR"
+        elif "$" in text or "USD" in text_upper:
+            logger.debug("Found currency: USD")
+            return "USD"
+        elif "£" in text or "GBP" in text_upper:
+            logger.debug("Found currency: GBP")
+            return "GBP"
         
-        # Check for currency codes
-        for code in config.VALIDATION_RULES["valid_currencies"]:
+        # Check for other currency codes (case-insensitive)
+        currency_codes = ["CAD", "AUD", "JPY", "CHF", "CNY", "INR", "BRL"]
+        for code in currency_codes:
             pattern = r"\b" + code + r"\b"
-            if re.search(pattern, text):
+            if re.search(pattern, text_upper):
                 logger.debug(f"Found currency code: {code}")
                 return code
-        
-        # Check for currency symbols
-        if "$" in text:
-            return "USD"
-        elif "€" in text:
-            return "EUR"
-        elif "£" in text:
-            return "GBP"
         
         return None
     
