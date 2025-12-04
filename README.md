@@ -1,6 +1,11 @@
 # Automated PDF Data Extraction & Validation Engine
 
-A production-grade Python system for processing large volumes of PDF documents, extracting structured business data, validating extracted fields, and exporting clean datasets to JSON and Excel formats.
+A production-ready Python system for processing large volumes of PDF documents, extracting structured business data, validating extracted fields, and exporting clean datasets to JSON and Excel formats. 
+
+Designed for enterprise use in document processing workflows, financial automation, and data extraction pipelines. Supports batch processing of invoices, purchase orders, contracts, and other business documents.
+
+[![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ## 🎯 Project Overview
 
@@ -282,6 +287,16 @@ To test the system:
 3. Run normally to process files
 4. Check output files and logs
 
+### Generating Test Data
+
+A test invoice generator is included for development and testing:
+
+```bash
+python3 create_test_invoice.py
+```
+
+This creates a sample invoice PDF in `input_pdfs/test_invoice.pdf` with all required fields for testing extraction and validation.
+
 ## 🔮 Future Enhancements
 
 Potential future additions:
@@ -294,19 +309,22 @@ Potential future additions:
 
 ## 📄 License
 
-This project is provided as-is for portfolio and demonstration purposes.
-
-## 👤 Author
-
-Built as a portfolio-grade project demonstrating:
-- Python Automation Engineering
-- Document Processing Expertise
-- Data Extraction & Validation
-- Production-Ready Code Architecture
+This project is licensed under the MIT License. See LICENSE file for details.
 
 ## 🤝 Contributing
 
-This is a portfolio project. For questions or suggestions, please open an issue.
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+### Development Guidelines
+
+1. Follow PEP 8 style guidelines
+2. Add tests for new features
+3. Update documentation as needed
+4. Ensure all existing tests pass
+
+## 📧 Support
+
+For issues, questions, or feature requests, please open an issue on GitHub.
 
 ---
 
